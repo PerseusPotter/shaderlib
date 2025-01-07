@@ -31,6 +31,7 @@ function Shader(fragSrc, vertSrc) {
   this.uniformLocCache = new Map();
   this.progId = glCreateProgram();
   if (this.progId === 0) throw 'Error while creating program: ' + glGetError();
+  allShaders.set(this.progId, this);
 
   if (fragSrc) this.addFragmentShader(fragSrc);
   if (vertSrc) this.addVertexShader(vertSrc);
@@ -94,6 +95,7 @@ Shader.prototype.unbind = function unbind() {
   glUseProgram(0);
 };
 Shader.prototype.dispose = function dispose() {
+  allShaders.delete(this.progId);
   glDeleteProgram(this.progId);
   this.progId = 0;
   this.uniformLocCache.clear();
