@@ -29,6 +29,7 @@ function Shader(fragSrc, vertSrc) {
 
   /** @type {Map<string, number>} */
   this.uniformLocCache = new Map();
+  /** @type {number} */
   this.progId = glCreateProgram();
   if (this.progId === 0) throw 'Error while creating program: ' + glGetError();
   allShaders.set(this.progId, this);
