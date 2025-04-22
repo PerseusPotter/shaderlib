@@ -8,6 +8,7 @@ export const glCreateShader = supportsShaders ? thing.glCreateShader : thing.glC
 export const glShaderSource = supportsShaders ? thing.glShaderSource : thing.glShaderSourceARB;
 export const GL_FRAGMENT_SHADER = supportsShaders ? thing.GL_FRAGMENT_SHADER : Java.type('org.lwjgl.opengl.ARBFragmentShader').GL_FRAGMENT_SHADER_ARB;
 export const GL_VERTEX_SHADER = supportsShaders ? thing.GL_VERTEX_SHADER : Java.type('org.lwjgl.opengl.ARBVertexShader').GL_VERTEX_SHADER_ARB;
+export const GL_GEOMETRY_SHADER = GL32.GL_GEOMETRY_SHADER;
 export const glCompileShader = supportsShaders ? thing.glCompileShader : thing.glCompileShaderARB;
 export const glGetShaderi = supportsShaders ? thing.glGetShaderi : thing.glGetObjectParameteriARB;
 export const GL_COMPILE_STATUS = supportsShaders ? thing.GL_COMPILE_STATUS : thing.GL_OBJECT_COMPILE_STATUS_ARB;
