@@ -1,4 +1,4 @@
-import { GL_COMPILE_STATUS, GL_FRAGMENT_SHADER, GL_GEOMETRY_SHADER, GL_LINK_STATUS, GL_VALIDATE_STATUS, GL_VERTEX_SHADER, glAttachShader, glCompileShader, glCreateProgram, glCreateShader, glDeleteProgram, glDeleteShader, glGetError, glGetProgrami, glGetProgramInfoLog, glGetShaderi, glGetShaderInfoLog, glGetUniformLocation, glLinkProgram, glShaderSource, glUniform1f, glUniform1fv, glUniform1i, glUniform1iv, glUniform2f, glUniform2fv, glUniform2i, glUniform2iv, glUniform3f, glUniform3fv, glUniform3i, glUniform3iv, glUniform4f, glUniform4fv, glUniform4i, glUniform4iv, glUniformMatrix2fv, glUniformMatrix3fv, glUniformMatrix4fv, glUseProgram, glValidateProgram } from './potato';
+import { canUseFragShader, canUseGeomShader, canUseShaders, canUseVertShader, GL_COMPILE_STATUS, GL_FRAGMENT_SHADER, GL_GEOMETRY_SHADER, GL_LINK_STATUS, GL_VALIDATE_STATUS, GL_VERTEX_SHADER, glAttachShader, glCompileShader, glCreateProgram, glCreateShader, glDeleteProgram, glDeleteShader, glGetError, glGetProgrami, glGetProgramInfoLog, glGetShaderi, glGetShaderInfoLog, glGetUniformLocation, glLinkProgram, glShaderSource, glUniform1f, glUniform1fv, glUniform1i, glUniform1iv, glUniform2f, glUniform2fv, glUniform2i, glUniform2iv, glUniform3f, glUniform3fv, glUniform3i, glUniform3iv, glUniform4f, glUniform4fv, glUniform4i, glUniform4iv, glUniformMatrix2fv, glUniformMatrix3fv, glUniformMatrix4fv, glUseProgram, glValidateProgram } from './potato';
 
 /** @type {Map<number, Shader>} */
 const allShaders = new Map();
@@ -23,7 +23,7 @@ const BufferUtils = Java.type('org.lwjgl.BufferUtils');
 function InternalShader(fragSrc, vertSrc, geomSrc) {
   if (!(this instanceof InternalShader)) throw new TypeError('Class constructor Shader cannot be invoked without \'new\'');
   if (mainThread !== Thread.currentThread()) {
-    print(new Error('Shader: not in main thread, delaying initialization'));
+    console.error(new Error('ShaderLib: not in main thread, delaying initialization'));
     Client.scheduleTask(2, () => {
       try {
         InternalShader.apply(this, arguments);
@@ -33,6 +33,7 @@ function InternalShader(fragSrc, vertSrc, geomSrc) {
     });
     return this;
   }
+  if (!canUseShaders()) return;
 
   /** @type {Map<string, number>} */
   this.uniformLocCache = new Map();
@@ -42,7 +43,7 @@ function InternalShader(fragSrc, vertSrc, geomSrc) {
   allShaders.set(this.progId, this);
 
   let fragId;
-  if (fragSrc) {
+  if (fragSrc && canUseFragShader()) {
     fragId = glCreateShader(GL_FRAGMENT_SHADER);
     if (fragId === 0) throw 'Error while creating fragment shader: ' + glGetError();
     glShaderSource(fragId, fragSrc);
@@ -50,7 +51,7 @@ function InternalShader(fragSrc, vertSrc, geomSrc) {
     if (glGetShaderi(fragId, GL_COMPILE_STATUS) !== 1) throw 'Error compiling fragment shader: ' + glGetShaderInfoLog(fragId, MAX_ERROR_LOG);
   }
   let vertId;
-  if (vertSrc) {
+  if (vertSrc && canUseVertShader()) {
     vertId = glCreateShader(GL_VERTEX_SHADER);
     if (vertId === 0) throw 'Error while creating vertex shader: ' + glGetError();
     glShaderSource(vertId, vertSrc);
@@ -58,7 +59,7 @@ function InternalShader(fragSrc, vertSrc, geomSrc) {
     if (glGetShaderi(vertId, GL_COMPILE_STATUS) !== 1) throw 'Error compiling vertex shader: ' + glGetShaderInfoLog(vertId, MAX_ERROR_LOG);
   }
   let geomId;
-  if (geomSrc) {
+  if (geomSrc && canUseGeomShader()) {
     geomId = glCreateShader(GL_GEOMETRY_SHADER);
     if (geomId === 0) throw 'Error while creating geometry shader: ' + glGetError();
     glShaderSource(geomId, geomSrc);
