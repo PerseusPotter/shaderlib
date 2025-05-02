@@ -20,13 +20,13 @@ const BufferUtils = Java.type('org.lwjgl.BufferUtils');
  * @param {string?} vertSrc
  * @param {string?} geomSrc
  */
-function InternalShader(fragSrc, vertSrc, geomSrc) {
-  if (!(this instanceof InternalShader)) throw new TypeError('Class constructor Shader cannot be invoked without \'new\'');
+function Shader(fragSrc, vertSrc, geomSrc) {
+  if (!(this instanceof Shader)) throw new TypeError('Class constructor Shader cannot be invoked without \'new\'');
   if (mainThread !== Thread.currentThread()) {
     console.error(new Error('ShaderLib: not in main thread, delaying initialization'));
     Client.scheduleTask(2, () => {
       try {
-        InternalShader.apply(this, arguments);
+        Shader.apply(this, arguments);
       } catch (e) {
         console.error(e);
       }
@@ -89,7 +89,7 @@ let loggerEnabled = false;
 /**
  * @param {'NOTIFICATION' | 'LOW' | 'MEDIUM' | 'HIGH'} level
  */
-InternalShader.enableErrorLogging = function enableErrorLogging(level) {
+Shader.enableErrorLogging = function enableErrorLogging(level) {
   if (loggerEnabled) return;
   loggerEnabled = true;
   level = ({
@@ -118,32 +118,33 @@ InternalShader.enableErrorLogging = function enableErrorLogging(level) {
     );
   });
 };
-InternalShader.prototype.checkProgramId = function checkProgramId() {
+Shader.prototype.checkProgramId = function checkProgramId() {
   if (this.progId === 0) throw 'No program object found.';
+  return this.progId === undefined;
 };
-InternalShader.prototype.bind = function bind() {
-  this.checkProgramId();
+Shader.prototype.bind = function bind() {
+  if (this.checkProgramId()) return;
   glUseProgram(this.progId);
 };
-InternalShader.prototype.unbind = function unbind() {
-  this.checkProgramId();
+Shader.prototype.unbind = function unbind() {
+  if (this.checkProgramId()) return;
   glUseProgram(0);
 };
-InternalShader.prototype.dispose = function dispose() {
+Shader.prototype.dispose = function dispose() {
   allShaders.delete(this.progId);
   glDeleteProgram(this.progId);
   this.progId = 0;
   this.uniformLocCache.clear();
   (Object.freeze || Function.prototype).call(this);
 };
-InternalShader.prototype.delete = InternalShader.prototype.dispose;
+Shader.prototype.delete = Shader.prototype.dispose;
 
 /**
  * @param {string} name
  * @returns {number}
  */
-InternalShader.prototype.getUniformLocation = function getUniformLocation(name) {
-  this.checkProgramId();
+Shader.prototype.getUniformLocation = function getUniformLocation(name) {
+  if (this.checkProgramId()) return;
   if (typeof name === 'number') return name;
   return this.uniformLocCache.get(name) ?? (
     this.uniformLocCache.set(name, glGetUniformLocation(this.progId, name)),
@@ -154,7 +155,8 @@ InternalShader.prototype.getUniformLocation = function getUniformLocation(name) 
  * @param {string | number} location
  * @param {number} v0
  */
-InternalShader.prototype.uniform1f = function uniform1f(location, v0) {
+Shader.prototype.uniform1f = function uniform1f(location, v0) {
+  if (this.checkProgramId()) return;
   glUniform1f(this.getUniformLocation(location), v0);
 };
 /**
@@ -162,7 +164,8 @@ InternalShader.prototype.uniform1f = function uniform1f(location, v0) {
  * @param {number} v0
  * @param {number} v1
  */
-InternalShader.prototype.uniform2f = function uniform2f(location, v0, v1) {
+Shader.prototype.uniform2f = function uniform2f(location, v0, v1) {
+  if (this.checkProgramId()) return;
   glUniform2f(this.getUniformLocation(location), v0, v1);
 };
 /**
@@ -171,7 +174,8 @@ InternalShader.prototype.uniform2f = function uniform2f(location, v0, v1) {
  * @param {number} v1
  * @param {number} v2
  */
-InternalShader.prototype.uniform3f = function uniform3f(location, v0, v1, v2) {
+Shader.prototype.uniform3f = function uniform3f(location, v0, v1, v2) {
+  if (this.checkProgramId()) return;
   glUniform3f(this.getUniformLocation(location), v0, v1, v2);
 };
 /**
@@ -181,14 +185,16 @@ InternalShader.prototype.uniform3f = function uniform3f(location, v0, v1, v2) {
  * @param {number} v2
  * @param {number} v3
  */
-InternalShader.prototype.uniform4f = function uniform4f(location, v0, v1, v2, v3) {
+Shader.prototype.uniform4f = function uniform4f(location, v0, v1, v2, v3) {
+  if (this.checkProgramId()) return;
   glUniform4f(this.getUniformLocation(location), v0, v1, v2, v3);
 };
 /**
  * @param {string | number} location
  * @param {number} v0
  */
-InternalShader.prototype.uniform1i = function uniform1i(location, v0) {
+Shader.prototype.uniform1i = function uniform1i(location, v0) {
+  if (this.checkProgramId()) return;
   glUniform1i(this.getUniformLocation(location), v0);
 };
 /**
@@ -196,7 +202,8 @@ InternalShader.prototype.uniform1i = function uniform1i(location, v0) {
  * @param {number} v0
  * @param {number} v1
  */
-InternalShader.prototype.uniform2i = function uniform2i(location, v0, v1) {
+Shader.prototype.uniform2i = function uniform2i(location, v0, v1) {
+  if (this.checkProgramId()) return;
   glUniform2i(this.getUniformLocation(location), v0, v1);
 };
 /**
@@ -205,7 +212,8 @@ InternalShader.prototype.uniform2i = function uniform2i(location, v0, v1) {
  * @param {number} v1
  * @param {number} v2
  */
-InternalShader.prototype.uniform3i = function uniform3i(location, v0, v1, v2) {
+Shader.prototype.uniform3i = function uniform3i(location, v0, v1, v2) {
+  if (this.checkProgramId()) return;
   glUniform3i(this.getUniformLocation(location), v0, v1, v2);
 };
 /**
@@ -215,7 +223,8 @@ InternalShader.prototype.uniform3i = function uniform3i(location, v0, v1, v2) {
  * @param {number} v2
  * @param {number} v3
  */
-InternalShader.prototype.uniform4i = function uniform4i(location, v0, v1, v2, v3) {
+Shader.prototype.uniform4i = function uniform4i(location, v0, v1, v2, v3) {
+  if (this.checkProgramId()) return;
   glUniform4i(this.getUniformLocation(location), v0, v1, v2, v3);
 };
 function coereceBuffer(input, create) {
@@ -233,56 +242,64 @@ const coereceIntBuffer = input => coereceBuffer(input, BufferUtils.createIntBuff
  * @param {string | number} location
  * @param {number[] | any} values java.nio.FloatBuffer
  */
-InternalShader.prototype.uniform1fv = function uniform1fv(location, values) {
+Shader.prototype.uniform1fv = function uniform1fv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform1fv(this.getUniformLocation(location), coereceFloatBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.FloatBuffer
  */
-InternalShader.prototype.uniform2fv = function uniform2fv(location, values) {
+Shader.prototype.uniform2fv = function uniform2fv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform2fv(this.getUniformLocation(location), coereceFloatBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.FloatBuffer
  */
-InternalShader.prototype.uniform3fv = function uniform3fv(location, values) {
+Shader.prototype.uniform3fv = function uniform3fv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform3fv(this.getUniformLocation(location), coereceFloatBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.FloatBuffer
  */
-InternalShader.prototype.uniform4fv = function uniform4fv(location, values) {
+Shader.prototype.uniform4fv = function uniform4fv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform4fv(this.getUniformLocation(location), coereceFloatBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.IntBuffer
  */
-InternalShader.prototype.uniform1iv = function uniform1iv(location, values) {
+Shader.prototype.uniform1iv = function uniform1iv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform1iv(this.getUniformLocation(location), coereceIntBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.IntBuffer
  */
-InternalShader.prototype.uniform2iv = function uniform2iv(location, values) {
+Shader.prototype.uniform2iv = function uniform2iv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform2iv(this.getUniformLocation(location), coereceIntBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.IntBuffer
  */
-InternalShader.prototype.uniform3iv = function uniform3iv(location, values) {
+Shader.prototype.uniform3iv = function uniform3iv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform3iv(this.getUniformLocation(location), coereceIntBuffer(values));
 };
 /**
  * @param {string | number} location
  * @param {number[] | any} values java.nio.IntBuffer
  */
-InternalShader.prototype.uniform4iv = function uniform4iv(location, values) {
+Shader.prototype.uniform4iv = function uniform4iv(location, values) {
+  if (this.checkProgramId()) return;
   glUniform4iv(this.getUniformLocation(location), coereceIntBuffer(values));
 };
 /**
@@ -290,7 +307,8 @@ InternalShader.prototype.uniform4iv = function uniform4iv(location, values) {
  * @param {boolean} transpose
  * @param {number[] | any} matrices java.nio.FloatBuffer
  */
-InternalShader.prototype.uniformMatrix2fv = function uniformMatrix2fv(location, transpose, matrices) {
+Shader.prototype.uniformMatrix2fv = function uniformMatrix2fv(location, transpose, matrices) {
+  if (this.checkProgramId()) return;
   glUniformMatrix2fv(this.getUniformLocation(location), transpose, coereceFloatBuffer(matrices));
 };
 /**
@@ -298,7 +316,8 @@ InternalShader.prototype.uniformMatrix2fv = function uniformMatrix2fv(location, 
  * @param {boolean} transpose
  * @param {number[] | any} matrices java.nio.FloatBuffer
  */
-InternalShader.prototype.uniformMatrix3fv = function uniformMatrix3fv(location, transpose, matrices) {
+Shader.prototype.uniformMatrix3fv = function uniformMatrix3fv(location, transpose, matrices) {
+  if (this.checkProgramId()) return;
   glUniformMatrix3fv(this.getUniformLocation(location), transpose, coereceFloatBuffer(matrices));
 };
 /**
@@ -306,10 +325,9 @@ InternalShader.prototype.uniformMatrix3fv = function uniformMatrix3fv(location, 
  * @param {boolean} transpose
  * @param {number[] | any} matrices java.nio.FloatBuffer
  */
-InternalShader.prototype.uniformMatrix4fv = function uniformMatrix4fv(location, transpose, matrices) {
+Shader.prototype.uniformMatrix4fv = function uniformMatrix4fv(location, transpose, matrices) {
+  if (this.checkProgramId()) return;
   glUniformMatrix4fv(this.getUniformLocation(location), transpose, coereceFloatBuffer(matrices));
 };
 
-/** @type {typeof InternalShader & { enableErrorLogging(): void }} */
-const Shader = InternalShader;
 export default Shader;
